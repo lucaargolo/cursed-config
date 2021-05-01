@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "latte",
+  "version": "${version}",
+  "name": "Latte",
+  "description": "Yet another config library, with auto generated screen support, made for internal use by my Fabric mods.",
+  "authors": [
+    "D4rkness_King"
+  ],
+  "contact": {
+    "homepage": "https://github.com/lucaargolo/latte",
+    "sources": "https://github.com/lucaargolo/latte",
+    "issues": "https://github.com/lucaargolo/latte/issues"
+  },
+  "license": "MPL-2.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.github.lucaargolo.latte.impl.LatteImpl"
+    ],
+    "modmenu": [
+      "io.github.lucaargolo.latte.compat.ModMenuCompat"
+    ]
+  },
+  "custom": {
+    "modmenu": {
+      "badges": [ "library" ]
+    }
+  },
+  "depends": {
+    "fabricloader": ">=0.11.2",
+    "minecraft": "1.16.5"
+  }
+}
