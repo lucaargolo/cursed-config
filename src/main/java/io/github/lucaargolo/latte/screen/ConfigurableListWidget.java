@@ -23,8 +23,8 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
     private boolean isArray = false, isMap = false, isObject = false;
     private final LinkedList<String> pushedLabels = new LinkedList<>();
 
-    public ConfigurableListWidget(LatteConfig<?> config, MinecraftClient client, int itemHeight) {
-        super(client, 0, 0, 0, 0, itemHeight);
+    public ConfigurableListWidget(LatteConfig<?> config, MinecraftClient client) {
+        super(client, 0, 0, 0, 0, 25);
         this.config = config;
         initElements("", null, config.getConfigClass(), config.getConfigClass(), config.getElement());
     }
@@ -146,17 +146,37 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             if(widget.isAdding()) {
                 widget.setAdding(false);
                 try {
-                    String elementKey = "";
+                    Class<?> valueClass = widget.getValueClass();
+                    Object value;
+                    if(valueClass == int.class || valueClass == Integer.class) {
+                        value = 0;
+                    }else if(valueClass == short.class || valueClass == Short.class) {
+                        value = 0;
+                    }else if(valueClass == long.class || valueClass == Long.class) {
+                        value = 0;
+                    }else if(valueClass == double.class || valueClass == Double.class) {
+                        value = 0;
+                    }else if(valueClass == float.class || valueClass == Float.class) {
+                        value = 0;
+                    }else if(valueClass == byte.class || valueClass == Byte.class) {
+                        value = 0;
+                    }else if(valueClass == boolean.class || valueClass == Boolean.class) {
+                        value = true;
+                    }else if(valueClass == char.class || valueClass == Character.class) {
+                        value = 'a';
+                    }else{
+                        value = valueClass.newInstance();
+                    }
+                    JsonElement valueElement = LatteConfig.GSON.toJsonTree(value);
+                    injectable = new Pair<>(index, new Pair<>("", valueElement));
+
                     Class<?> keyClass = widget.getKeyClass();
                     if(keyClass != null) {
-                        Object key = keyClass.newInstance();
-                        JsonElement keyElement = LatteConfig.GSON.toJsonTree(key);
-                        //TODO: Pause and wait for screen input for key elements
+                        if(client.currentScreen instanceof LatteScreen) {
+                            client.openScreen(new LatteScreen.AddKeyScreen((LatteScreen) client.currentScreen, keyClass, injectable));
+                        }
+                        return;
                     }
-                    Class<?> valueClass = widget.getValueClass();
-                    Object value = valueClass.newInstance();
-                    JsonElement valueElement = LatteConfig.GSON.toJsonTree(value);
-                    injectable = new Pair<>(index, new Pair<>(elementKey, valueElement));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -226,19 +246,33 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             JsonPrimitive primitive = (JsonPrimitive) element;
             ConfigurableWidget<?> widget;
             try {
-                Field innerField = elementClass.getDeclaredField(elementKey);
-                Class<?> fieldClass = innerField.getType();
-                if(isArray && !isObject) {
-                    widget = ConfigurableWidget.fromPrimitiveArray(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, fieldClass);
+                if((isArray || isMap) && !isObject) {
+                    if(isArray) {
+                        Class<?> arrayClass = String.class;
+                        if (elementType instanceof ParameterizedType && Collection.class.isAssignableFrom(elementClass)) {
+                            arrayClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
+                        } else if (elementClass.isArray()) {
+                            arrayClass = elementClass.getComponentType();
+                        }
+                        widget = ConfigurableWidget.fromPrimitiveArray(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, arrayClass);
+                    }else{
+                        Class<?> mapKeyClass = String.class;
+                        Class<?> mapValueClass = String.class;
+                        if (elementType instanceof ParameterizedType) {
+                            if(Map.class.isAssignableFrom(elementClass)) {
+                                mapKeyClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
+                                mapValueClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[1];
+                            }
+                        }
+                        widget = ConfigurableWidget.fromPrimitiveMap(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, mapKeyClass, primitive, mapValueClass);
+                    }
                 }else{
+                    Field innerField = elementClass.getDeclaredField(elementKey);
+                    Class<?> fieldClass = innerField.getType();
                     widget = ConfigurableWidget.fromPrimitive(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, fieldClass);
                 }
             } catch (NoSuchFieldException ignored) {
-                if(isArray && !isObject) {
-                    widget = ConfigurableWidget.fromPrimitiveArray(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, String.class);
-                }else{
-                    widget = ConfigurableWidget.fromPrimitive(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, String.class);
-                }
+                widget = ConfigurableWidget.fromPrimitive(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, String.class);
             }
             addEntry(widget);
         }else if(element.isJsonObject()) {

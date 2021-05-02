@@ -11,9 +11,9 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,13 +97,21 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
                     this.addEntryButton.visible = true;
                     try{
                         if(arrayReference != null) {
-                            arrayReference.newInstance();
+                            if(!ClassUtils.isPrimitiveOrWrapper(arrayReference)) {
+                                arrayReference.newInstance();
+                            }
                         }else{
-                            mapReference.getValue().newInstance();
+                            if(!ClassUtils.isPrimitiveOrWrapper(mapReference.getKey())) {
+                                mapReference.getKey().newInstance();
+                            }
+                            if(!ClassUtils.isPrimitiveOrWrapper(mapReference.getValue())) {
+                                mapReference.getValue().newInstance();
+                            }
                         }
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         this.addEntryButton.active = false;
                     }
+
                     this.addEntryButton.x = width-90;
                     this.addEntryButton.setWidth(40);
 
@@ -169,7 +177,7 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         }
     }
 
-    public Class<V> getValueClass() {
+    public Class<?> getValueClass() {
         if(arrayReference != null) {
             return arrayReference;
         }else if(mapReference != null) {
@@ -466,6 +474,27 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
             return ConfigurableWidget.fromCharArray(textRenderer, text, offset, width, height, key, primitive.getAsCharacter());
         }
         return ConfigurableWidget.fromStringArray(textRenderer, text, offset, width, height, key, primitive.getAsString());
+    }
+
+    public static ConfigurableWidget<?> fromPrimitiveMap(TextRenderer textRenderer, Text text, int offset, int width, int height, String key, Class<?> keyClass, JsonPrimitive primitive, Class<?> primitiveClass) {
+        if(primitiveClass == int.class || primitiveClass == Integer.class) {
+            return ConfigurableWidget.fromIntMap(textRenderer, text, offset, width, height, key, primitive.getAsInt(), keyClass);
+        }else if(primitiveClass == short.class || primitiveClass == Short.class) {
+            return ConfigurableWidget.fromShortMap(textRenderer, text, offset, width, height, key, primitive.getAsShort(), keyClass);
+        }else if(primitiveClass == long.class || primitiveClass == Long.class) {
+            return ConfigurableWidget.fromLongMap(textRenderer, text, offset, width, height, key, primitive.getAsLong(), keyClass);
+        }else if(primitiveClass == double.class || primitiveClass == Double.class) {
+            return ConfigurableWidget.fromDoubleMap(textRenderer, text, offset, width, height, key, primitive.getAsDouble(), keyClass);
+        }else if(primitiveClass == float.class || primitiveClass == Float.class) {
+            return ConfigurableWidget.fromFloatMap(textRenderer, text, offset, width, height, key, primitive.getAsFloat(), keyClass);
+        }else if(primitiveClass == byte.class || primitiveClass == Byte.class) {
+            return ConfigurableWidget.fromByteMap(textRenderer, text, offset, width, height, key, primitive.getAsByte(), keyClass);
+        }else if(primitiveClass == boolean.class || primitiveClass == Boolean.class) {
+            return ConfigurableWidget.fromBooleanMap(textRenderer, text, offset, width, height, key, primitive.getAsBoolean(), keyClass);
+        }else if(primitiveClass == char.class || primitiveClass == Character.class) {
+            return ConfigurableWidget.fromCharMap(textRenderer, text, offset, width, height, key, primitive.getAsCharacter(), keyClass);
+        }
+        return ConfigurableWidget.fromStringMap(textRenderer, text, offset, width, height, key, primitive.getAsString(), keyClass);
     }
     
     public static ConfigurableWidget<String> fromLabel(TextRenderer textRenderer, Text text, int offset, int width, int height, String key) {

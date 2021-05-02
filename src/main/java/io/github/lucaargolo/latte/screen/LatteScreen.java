@@ -1,18 +1,21 @@
 package io.github.lucaargolo.latte.screen;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.github.lucaargolo.latte.LatteConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 
 public class LatteScreen extends Screen {
@@ -30,7 +33,7 @@ public class LatteScreen extends Screen {
         super(title);
         this.configs = configs;
         this.listWidgets = new ArrayList<>();
-        configs.forEach(config -> this.listWidgets.add(new ConfigurableListWidget(config, MinecraftClient.getInstance(), 25)));
+        configs.forEach(config -> this.listWidgets.add(new ConfigurableListWidget(config, MinecraftClient.getInstance())));
         this.previous = previous;
     }
 
@@ -73,7 +76,7 @@ public class LatteScreen extends Screen {
     private void saveList(JsonElement jsonElement) {
         this.configs.get(selectedList).save(jsonElement);
         listWidgets.clear();
-        configs.forEach(config -> this.listWidgets.add(new ConfigurableListWidget(config, MinecraftClient.getInstance(), 25)));
+        configs.forEach(config -> this.listWidgets.add(new ConfigurableListWidget(config, MinecraftClient.getInstance())));
         init();
     }
 
@@ -99,6 +102,78 @@ public class LatteScreen extends Screen {
     public void onClose() {
         if(this.client != null) {
             this.client.openScreen(this.previous);
+        }
+    }
+
+    public static class AddKeyScreen extends Screen {
+
+        private final LatteScreen previous;
+        private final Function<String, Object> validator;
+        private final Pair<Integer, Pair<String, JsonElement>> injected;
+        private TextFieldWidget textField;
+        private ButtonWidget doneButton;
+
+        public AddKeyScreen(LatteScreen previous, Class<?> keyClass, Pair<Integer, Pair<String, JsonElement>> injected) {
+            super(new LiteralText("Add Entry"));
+            this.previous = previous;
+
+            if(keyClass == int.class || keyClass == Integer.class) {
+                validator = s -> { try { return Integer.parseInt(s); } catch (Exception ignored) { return null; } };
+            }else if(keyClass == short.class || keyClass == Short.class) {
+                validator = s -> { try { return Short.parseShort(s); } catch (Exception ignored) { return null; } };
+            }else if(keyClass == long.class || keyClass == Long.class) {
+                validator = s -> { try { return Long.parseLong(s); } catch (Exception ignored) { return null; } };
+            }else if(keyClass == double.class || keyClass == Double.class) {
+                validator = s -> { try { return Double.parseDouble(s); } catch (Exception ignored) { return null; } };
+            }else if(keyClass == float.class || keyClass == Float.class) {
+                validator = s -> { try { return Float.parseFloat(s); } catch (Exception ignored) { return null; } };
+            }else if(keyClass == byte.class || keyClass == Byte.class) {
+                validator = s -> { try { return Byte.parseByte(s); } catch (Exception ignored) { return null; } };
+            }else if(keyClass == boolean.class || keyClass == Boolean.class) {
+                validator = s -> s.equals("true") || s.equals("false");
+            }else if(keyClass == char.class || keyClass == Character.class) {
+                validator = s -> s.toCharArray().length == 1;
+            }else{
+                validator = s -> "";
+            }
+
+            this.injected = injected;
+        }
+
+        @Override
+        public void init() {
+            children.clear();
+            this.textField = this.addChild(new TextFieldWidget(textRenderer, this.width / 2 - 50, this.height / 2 - 10, 100, 20, new LiteralText("")));
+            this.doneButton = this.addButton(new ButtonWidget(this.width / 2 - 50, this.height / 2 + 20, 100, 20, ScreenTexts.DONE, (button) -> this.onClose()));
+        }
+
+        @Override
+        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+            this.renderBackground(matrices);
+            this.textField.render(matrices, mouseX, mouseY, delta);
+            drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, this.height / 2 - 30, 0xffffff);
+            if(validator.apply(textField.getText()) != null) {
+                textField.setEditableColor(14737632);
+                doneButton.active = true;
+            }else{
+                textField.setEditableColor(0xFFFF0000);
+                doneButton.active = false;
+            }
+            super.render(matrices, mouseX, mouseY, delta);
+        }
+
+        @Override
+        public void tick() {
+            this.textField.tick();
+        }
+
+        public void onClose() {
+            if(this.client != null) {
+                String newKey = textField.getText();
+                Pair<Integer, Pair<String, JsonElement>> newInjected = new Pair<>(injected.getLeft(), new Pair<>(newKey, injected.getRight().getRight()));
+                this.previous.listWidget.reload(newInjected);
+                this.client.openScreen(this.previous);
+            }
         }
     }
 

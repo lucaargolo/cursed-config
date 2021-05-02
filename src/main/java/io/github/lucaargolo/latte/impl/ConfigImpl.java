@@ -49,6 +49,7 @@ public class ConfigImpl {
 
     private final Map<String, String> stringStringMap = new HashMap<>();
     private final Map<Integer, String> integerStringMap = new HashMap<>();
+    private final Map<Integer, Integer> integerIntegerMap = new HashMap<>();
 
     private final Map<String, ClassWithBasicConstructor> stringClassWithBasicConstructorMap = new HashMap<>();
     private final Map<String, ClassWithoutBasicConstructor> stringClassWithoutBasicConstructorMap = new HashMap<>();
@@ -69,6 +70,10 @@ public class ConfigImpl {
         integerStringMap.put(1, "string");
         integerStringMap.put(2, "string");
         integerStringMap.put(3, "string");
+
+        integerIntegerMap.put(1, 3);
+        integerIntegerMap.put(2, 2);
+        integerIntegerMap.put(3, 1);
 
         stringClassWithBasicConstructorMap.put("string1", new ClassWithBasicConstructor());
         stringClassWithBasicConstructorMap.put("string2", new ClassWithBasicConstructor());
