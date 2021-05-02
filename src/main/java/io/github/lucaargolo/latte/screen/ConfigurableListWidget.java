@@ -1,6 +1,7 @@
 package io.github.lucaargolo.latte.screen;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import io.github.lucaargolo.latte.LatteConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TickableElement;
@@ -219,10 +220,10 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                             Class<?> innerValueClass = String.class;
                             if (elementType instanceof ParameterizedType) {
                                 if(Collection.class.isAssignableFrom(elementClass)) {
-                                    innerValueClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
+                                    innerValueClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
                                 }else if(Map.class.isAssignableFrom(elementClass)) {
-                                    innerKeyClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
-                                    innerValueClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[1];
+                                    innerKeyClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
+                                    innerValueClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[1]).getRawType();
                                 }
                             } else if (elementClass.isArray()) {
                                 innerValueClass = elementClass.getComponentType();
@@ -250,7 +251,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                     if(isArray) {
                         Class<?> arrayClass = String.class;
                         if (elementType instanceof ParameterizedType && Collection.class.isAssignableFrom(elementClass)) {
-                            arrayClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
+                            arrayClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
                         } else if (elementClass.isArray()) {
                             arrayClass = elementClass.getComponentType();
                         }
@@ -260,8 +261,8 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                         Class<?> mapValueClass = String.class;
                         if (elementType instanceof ParameterizedType) {
                             if(Map.class.isAssignableFrom(elementClass)) {
-                                mapKeyClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
-                                mapValueClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[1];
+                                mapKeyClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
+                                mapValueClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[1]).getRawType();
                             }
                         }
                         widget = ConfigurableWidget.fromPrimitiveMap(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, mapKeyClass, primitive, mapValueClass);
@@ -288,10 +289,10 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                 try {
                     if (elementType instanceof ParameterizedType) {
                         if(Collection.class.isAssignableFrom(elementClass)) {
-                            innerElementClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
+                            innerElementClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
                             innerElementType = ((ParameterizedType) elementType).getActualTypeArguments()[0];
                         }else if(Map.class.isAssignableFrom(elementClass)) {
-                            innerElementClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[1];
+                            innerElementClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[1]).getRawType();
                             innerElementType = ((ParameterizedType) elementType).getActualTypeArguments()[1];
                         }
                     } else if (elementClass.isArray()) {
@@ -326,8 +327,8 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                     Class<?> innerKeyClass = String.class;
                     Class<?> innerValueClass = String.class;
                     if (elementType instanceof ParameterizedType) {
-                        innerKeyClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[0];
-                        innerValueClass = (Class<?>) ((ParameterizedType) elementType).getActualTypeArguments()[1];
+                        innerKeyClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
+                        innerValueClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[1]).getRawType();
                     }
                     addEntry(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, new AbstractMap.SimpleEntry<>(innerKeyClass, innerValueClass)));
                 }
@@ -361,7 +362,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             if(array.size() == 0) {
                 Class<?> arrayElementClass = String.class;
                 if(arrayType instanceof ParameterizedType && Collection.class.isAssignableFrom(arrayClass)) {
-                    arrayElementClass = (Class<?>) ((ParameterizedType) arrayType).getActualTypeArguments()[0];
+                    arrayElementClass = TypeToken.get(((ParameterizedType) arrayType).getActualTypeArguments()[0]).getRawType();
                 }else if(arrayClass.isArray()) {
                     arrayElementClass = arrayClass.getComponentType();
                 }
