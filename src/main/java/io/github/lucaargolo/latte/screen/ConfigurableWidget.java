@@ -30,7 +30,7 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
     private final Text text;
 
     private final int offset;
-    private final String key;
+    private String key;
     private final V value;
     private final Function<String, V> valueValidator;
 
@@ -167,6 +167,25 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
 
     public int getOffset() {
         return offset;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getOriginalValue() {
+        if(value != null) {
+            return value.toString();
+        }
+        return null;
+    }
+
+    public String getCurrentValue() {
+        return textField.getText();
     }
 
     public Class<?> getKeyClass() {

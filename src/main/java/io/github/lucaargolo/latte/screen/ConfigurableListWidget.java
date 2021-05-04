@@ -27,7 +27,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
     public ConfigurableListWidget(LatteConfig<?> config, MinecraftClient client) {
         super(client, 0, 0, 0, 0, 25);
         this.config = config;
-        initElements("", null, config.getConfigClass(), config.getConfigClass(), config.getElement());
+        initElements(children(), "", null, config.getConfigClass(), config.getConfigClass(), config.getElement());
     }
 
     public void init(int width, int height, int top, int bottom) {
@@ -118,21 +118,58 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             }
             index++;
         }
-        System.out.println(jsonElementStack.getFirst().toString());
         return jsonElementStack.getFirst();
     }
 
-    //TODO: If reloaded keep track of changed values
     public void reload(Pair<Integer, Pair<String, JsonElement>> inject) {
         JsonElement newElement = save(inject);
-        children().clear();
         offset = 0;
         lastElement = null;
         isArray = false;
         isMap = false;
         isObject = false;
         pushedLabels.clear();
-        initElements("", null, config.getConfigClass(), config.getConfigClass(), newElement);
+        List<ConfigurableWidget<?>> reloadedEntries = new ArrayList<>();
+        initElements(reloadedEntries, "", null, config.getConfigClass(), config.getConfigClass(), newElement);
+        int index = 0;
+        boolean shouldSkipNext = false;
+        ListIterator<ConfigurableWidget<?>> reloadedEntriesIterator = reloadedEntries.listIterator();
+        while (reloadedEntriesIterator.hasNext()) {
+            ConfigurableWidget<?> reloadedEntry = reloadedEntriesIterator.next();
+            ConfigurableWidget<?> oldEntry = null;
+            if(index < children().size()) {
+                oldEntry = children().get(index);
+            }
+            if(oldEntry != null && oldEntry.getOffset() == reloadedEntry.getOffset() && oldEntry.isResettable() && reloadedEntry.getOriginalValue() != null && reloadedEntry.getOriginalValue().equals(oldEntry.getCurrentValue())) {
+                String key = oldEntry.getKey();
+                Integer keyInt = null;
+                try { keyInt = Integer.parseInt(key); }catch (Exception ignored) { }
+                if(key.equals(reloadedEntry.getKey())) {
+                    reloadedEntriesIterator.remove();
+                    reloadedEntriesIterator.add(oldEntry);
+                }else if(keyInt != null && reloadedEntry.getKey().equals(""+(keyInt-1))) {
+                    oldEntry.setKey(""+(keyInt-1));
+                    reloadedEntriesIterator.remove();
+                    reloadedEntriesIterator.add(oldEntry);
+                }else if(keyInt != null && reloadedEntry.getKey().equals(""+(keyInt+1))) {
+                    oldEntry.setKey(""+(keyInt+1));
+                    reloadedEntriesIterator.remove();
+                    reloadedEntriesIterator.add(oldEntry);
+                }
+            }
+            index++;
+            //Need to reply the index behaviour to found out where it was actually injected
+            if(shouldSkipNext && reloadedEntriesIterator.hasNext() ) {
+                reloadedEntriesIterator.next();
+                shouldSkipNext = false;
+            }
+            if(inject != null && index >= inject.getLeft() && (index + 1 == children().size() || children().get(index+1).getOffset() == children().get(inject.getLeft()).getOffset())) {
+               shouldSkipNext = true;
+               inject = null;
+            }
+        }
+        children().clear();
+        children().addAll(reloadedEntries);
         init(width, height, top, bottom);
     }
 
@@ -202,7 +239,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
         }
     }
 
-    private void initElements(String elementParent, String elementKey, Class<?> elementClass, Type elementType, JsonElement element) {
+    private void initElements(List<ConfigurableWidget<?>> entries, String elementParent, String elementKey, Class<?> elementClass, Type elementType, JsonElement element) {
         if(lastElement == null || !lastElement.equals(elementParent)) {
             if(pushedLabels.lastIndexOf(elementParent) >= 0) {
                 for(int x = pushedLabels.lastIndexOf(elementParent); x < pushedLabels.size(); x++) {
@@ -214,7 +251,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                 if(lastElement != null) {
                     if(isArray || isMap) {
                         if(isObject) {
-                            addEntry(ConfigurableWidget.fromRemovableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, elementClass));
+                            entries.add(ConfigurableWidget.fromRemovableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, elementClass));
                         }else {
                             Class<?> innerKeyClass = null;
                             Class<?> innerValueClass = String.class;
@@ -229,13 +266,13 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                                 innerValueClass = elementClass.getComponentType();
                             }
                             if(innerKeyClass != null) {
-                                addEntry(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, new AbstractMap.SimpleEntry<>(innerKeyClass, innerValueClass)));
+                                entries.add(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, new AbstractMap.SimpleEntry<>(innerKeyClass, innerValueClass)));
                             }else{
-                                addEntry(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, innerValueClass));
+                                entries.add(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, innerValueClass));
                             }
                         }
                     }else{
-                        addEntry(ConfigurableWidget.fromLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent));
+                        entries.add(ConfigurableWidget.fromLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent));
                     }
                     offset++;
                 }
@@ -275,7 +312,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             } catch (NoSuchFieldException ignored) {
                 widget = ConfigurableWidget.fromPrimitive(client.textRenderer, new LiteralText(elementKey), offset, width-20, 18, elementKey, primitive, String.class);
             }
-            addEntry(widget);
+            entries.add(widget);
         }else if(element.isJsonObject()) {
             JsonObject object = (JsonObject) element;
             boolean lastIsArray = isArray;
@@ -317,9 +354,9 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                 String innerElementKey = objectEntry.getKey();
                 JsonElement innerElement = objectEntry.getValue();
                 if(elementKey != null) {
-                    initElements(elementKey, innerElementKey, innerElementClass, innerElementType, innerElement);
+                    initElements(entries, elementKey, innerElementKey, innerElementClass, innerElementType, innerElement);
                 }else{
-                    initElements(elementParent, innerElementKey, elementClass, elementType, innerElement);
+                    initElements(entries, elementParent, innerElementKey, elementClass, elementType, innerElement);
                 }
             }
             if(object.size() == 0 && elementKey != null) {
@@ -330,9 +367,9 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                         innerKeyClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[0]).getRawType();
                         innerValueClass = TypeToken.get(((ParameterizedType) elementType).getActualTypeArguments()[1]).getRawType();
                     }
-                    addEntry(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, new AbstractMap.SimpleEntry<>(innerKeyClass, innerValueClass)));
+                    entries.add(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementParent), offset, width - 20, 18, elementParent, new AbstractMap.SimpleEntry<>(innerKeyClass, innerValueClass)));
                 }
-                addEntry(ConfigurableWidget.fromLabel(client.textRenderer, new LiteralText(elementKey), offset, width - 20, 18, elementKey));
+                entries.add(ConfigurableWidget.fromLabel(client.textRenderer, new LiteralText(elementKey), offset, width - 20, 18, elementKey));
             }
             isArray = lastIsArray;
             isMap = lastIsMap;
@@ -356,7 +393,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             isArray = true;
             isObject = false;
             for(JsonElement arrayElement: array) {
-                initElements(elementKey, ""+arrayIndex, arrayClass, arrayType, arrayElement);
+                initElements(entries, elementKey, ""+arrayIndex, arrayClass, arrayType, arrayElement);
                 arrayIndex++;
             }
             if(array.size() == 0) {
@@ -366,7 +403,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                 }else if(arrayClass.isArray()) {
                     arrayElementClass = arrayClass.getComponentType();
                 }
-                addEntry(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementKey), offset, width - 20, 18, elementKey, arrayElementClass));
+                entries.add(ConfigurableWidget.fromAddableEntryLabel(client.textRenderer, new LiteralText(elementKey), offset, width - 20, 18, elementKey, arrayElementClass));
             }
             isMap = lastIsMap;
             isArray = lastIsArray;
