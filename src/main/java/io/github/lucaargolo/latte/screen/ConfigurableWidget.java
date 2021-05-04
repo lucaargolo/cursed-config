@@ -1,6 +1,7 @@
 package io.github.lucaargolo.latte.screen;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.client.font.TextRenderer;
@@ -34,8 +35,8 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
     private final V value;
     private final Function<String, V> valueValidator;
 
-    private final Class<V> arrayReference;
-    private final Map.Entry<Class<?>, Class<V>> mapReference;
+    private final Class<?> arrayReference;
+    private final Map.Entry<Class<?>, Class<?>> mapReference;
 
     private final TextFieldWidget textField;
     private final ButtonWidget addEntryButton;
@@ -47,7 +48,9 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
     private boolean isRemoved = false;
     private boolean isAdding = false;
 
-    private ConfigurableWidget(TextRenderer textRenderer, Text text, int offset, int width, int height, @NotNull String key, @Nullable V value, @Nullable Function<String, V> valueValidator, @Nullable Class<V> arrayReference, @Nullable Map.Entry<Class<?>, Class<V>> mapReference) {
+    private boolean isResettingChildren = false;
+
+    private ConfigurableWidget(TextRenderer textRenderer, Text text, int offset, int width, int height, @NotNull String key, @Nullable V value, @Nullable Function<String, V> valueValidator, @Nullable Class<?> arrayReference, @Nullable Map.Entry<Class<?>, Class<?>> mapReference) {
         this.textRenderer = textRenderer;
         this.text = text;
         this.offset = offset;
@@ -62,7 +65,7 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         this.textField = new TextFieldWidget(textRenderer, width/2, 0, width/2-51, height, text);
         this.addEntryButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("screen.latte.add"), (button) -> isAdding = true);
         this.removeEntryButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("screen.latte.remove"), (button) -> isRemoved = true);
-        this.resetButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("controls.reset"), (button) -> textField.setText(""+value));
+        this.resetButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("controls.reset"), (button) -> this.reset());
 
         this.children.add(textField);
         this.children.add(addEntryButton);
@@ -70,13 +73,16 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         this.children.add(resetButton);
 
         if(value != null) {
+            if(isValueJsonElement()) {
+                this.textField.setMaxLength(Integer.MAX_VALUE);
+            }
             this.textField.setText(value.toString());
         }
     }
 
     public void init(int width, int height) {
         if(arrayReference != null || mapReference != null) {
-            if(value != null) {
+            if(value != null && !isValueJsonElement()) {
                 this.textField.visible = true;
                 this.textField.x = width/2;
                 this.textField.setWidth(width/2-101);
@@ -132,7 +138,7 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
                     this.resetButton.visible = false;
                 }
             }
-        }else if(value != null){
+        }else if(value != null && !isValueJsonElement()){
             this.textField.visible = true;
             this.textField.x = width/2;
             this.textField.setWidth(width/2-51);
@@ -165,6 +171,14 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         isAdding = adding;
     }
 
+    public boolean isResettingChildren() {
+        return isResettingChildren;
+    }
+
+    public void setResettingChildren(boolean resettingChildren) {
+        isResettingChildren = resettingChildren;
+    }
+
     public int getOffset() {
         return offset;
     }
@@ -177,6 +191,10 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         this.key = key;
     }
 
+    public V getValue() {
+        return value;
+    }
+
     public String getOriginalValue() {
         if(value != null) {
             return value.toString();
@@ -186,6 +204,10 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
 
     public String getCurrentValue() {
         return textField.getText();
+    }
+
+    public void setCurrentValue(String value) {
+        textField.setText(value);
     }
 
     public Class<?> getKeyClass() {
@@ -206,16 +228,22 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         }
     }
 
+    public boolean isValueJsonElement() {
+        return value instanceof JsonElement;
+    }
+
     public boolean isSavable() {
-        if(value != null && valueValidator != null) {
+        if(value != null && valueValidator != null && !isValueJsonElement()) {
             return valueValidator.apply(textField.getText()) != null;
         }
         return true;
     }
 
     public void save(JsonObject jsonObject) {
-        if(value == null) {
-            if(valueValidator != null && arrayReference != null) {
+        if(value == null || isValueJsonElement()) {
+            if(isValueJsonElement() && isResettingChildren()) {
+                jsonObject.add(key, (JsonElement) value);
+            }else if(valueValidator != null && arrayReference != null) {
                 jsonObject.add(key, new JsonArray());
             }else{
                 jsonObject.add(key, new JsonObject());
@@ -253,23 +281,28 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
     public boolean isResettable() {
         if(resetButton.visible && valueValidator != null) {
             if(value != null) {
-                if(valueValidator.apply(textField.getText()) != null) {
-                    textField.setEditableColor(14737632);
+                if(isValueJsonElement()) {
                     return !value.toString().equals(textField.getText());
                 }else{
-                    textField.setEditableColor(0xFFFF0000);
-                    return true;
+                    if(valueValidator.apply(textField.getText()) != null) {
+                        textField.setEditableColor(14737632);
+                        return !value.toString().equals(textField.getText());
+                    }else{
+                        textField.setEditableColor(0xFFFF0000);
+                        return true;
+                    }
                 }
-            }else if(arrayReference != null || mapReference != null) {
-                //TODO: Fucking this
-                return false;
             }
         }
         return false;
     }
 
     public void reset() {
-        resetButton.onPress();
+        if(isValueJsonElement()) {
+            isResettingChildren = true;
+        }else{
+            textField.setText(""+value);
+        }
     }
 
     @Override
@@ -520,12 +553,12 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         return new ConfigurableWidget<>(textRenderer, text, offset, width, height, key, null, null, null, null);
     }
 
-    public static <V> ConfigurableWidget<V> fromAddableEntryLabel(TextRenderer textRenderer, Text text, int offset, int width, int height, String key, Class<V> arrayReference) {
-        return new ConfigurableWidget<>(textRenderer, text, offset, width, height, key, null, s -> null, arrayReference, null);
+    public static ConfigurableWidget<JsonElement> fromAddableEntryLabel(TextRenderer textRenderer, Text text, int offset, int width, int height, String key, JsonElement value, Class<?> arrayReference) {
+        return new ConfigurableWidget<>(textRenderer, text, offset, width, height, key, value, s -> null, arrayReference, null);
     }
 
-    public static <V> ConfigurableWidget<V> fromAddableEntryLabel(TextRenderer textRenderer, Text text, int offset, int width, int height, String key, Map.Entry<Class<?>, Class<V>> mapReference) {
-        return new ConfigurableWidget<>(textRenderer, text, offset, width, height, key, null, s -> null, null, mapReference);
+    public static ConfigurableWidget<JsonElement> fromAddableEntryLabel(TextRenderer textRenderer, Text text, int offset, int width, int height, String key, JsonElement value, Map.Entry<Class<?>, Class<?>> mapReference) {
+        return new ConfigurableWidget<>(textRenderer, text, offset, width, height, key, value, s -> null, null, mapReference);
     }
 
     public static <V> ConfigurableWidget<V> fromRemovableEntryLabel(TextRenderer textRenderer, Text text, int offset, int width, int height, String key, Class<V> arrayReference) {
