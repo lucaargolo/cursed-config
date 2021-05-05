@@ -1,4 +1,4 @@
-package io.github.lucaargolo.cursedconfig.screen;
+package io.github.lucaargolo.cursedconfig.api.screen;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

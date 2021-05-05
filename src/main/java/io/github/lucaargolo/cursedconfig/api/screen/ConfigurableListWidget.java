@@ -1,11 +1,11 @@
-package io.github.lucaargolo.cursedconfig.screen;
+package io.github.lucaargolo.cursedconfig.api.screen;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
-import io.github.lucaargolo.cursedconfig.CursedConfig;
+import io.github.lucaargolo.cursedconfig.api.CursedConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.widget.EntryListWidget;

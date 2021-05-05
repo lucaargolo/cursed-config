@@ -10,6 +10,13 @@ archivesBaseName = project.archives_base_name+"-"+project.minecraft_version
 version = project.mod_version
 group = project.maven_group
 
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
 repositories {
     maven {
         name = "TerraformersMC"
@@ -25,6 +32,10 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    afterEvaluate {
+        testmodCompile sourceSets.main.output
+    }
 }
 
 processResources {

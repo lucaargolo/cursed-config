@@ -1,7 +1,7 @@
-package io.github.lucaargolo.cursedconfig.screen;
+package io.github.lucaargolo.cursedconfig.api.screen;
 
 import com.google.gson.JsonElement;
-import io.github.lucaargolo.cursedconfig.CursedConfig;
+import io.github.lucaargolo.cursedconfig.api.CursedConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;

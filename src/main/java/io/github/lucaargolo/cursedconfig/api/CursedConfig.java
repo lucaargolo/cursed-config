@@ -1,5 +1,4 @@
-package io.github.lucaargolo.cursedconfig;
-
+package io.github.lucaargolo.cursedconfig.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "cursedconfig",
-  "version": "${version}",
-  "name": "Cursed Config",
-  "description": "An extremely cursed config library, with auto-generated screen support, made for internal use by my Fabric mods.",
+  "id": "cursedconfig-impl",
+  "version": "1.0-BETA",
+  "name": "Cursed Config Test Impl",
+  "description": "Test implementation for the Cursed Config library.",
   "authors": [
     "D4rkness_King"
   ],
@@ -15,13 +15,13 @@
   "license": "MPL-2.0",
   "environment": "*",
   "entrypoints": {
-    "modmenu": [
-      "io.github.lucaargolo.cursedconfig.api.compat.ModMenuCompat"
+    "main": [
+      "io.github.lucaargolo.cursedconfig.impl.CursedImpl"
     ]
   },
   "custom": {
     "modmenu": {
-      "badges": [ "library" ]
+      "parent": "cursedconfig"
     }
   },
   "depends": {
