@@ -12,7 +12,11 @@ public class ModMenuCompat implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return (previous) -> new ConfigScreen(previous, CursedConfig.configsForScreens.get("latte").getLeft(), CursedConfig.configsForScreens.get("latte").getRight());
+        //In case there's a screen implementation for this mod we need to add it here.
+        if(CursedConfig.configsForScreens.containsKey("cursedconfig")) {
+            return (previous) -> new ConfigScreen(previous, CursedConfig.configsForScreens.get("cursedconfig").getLeft(), CursedConfig.configsForScreens.get("cursedconfig").getRight());
+        }
+        return ModMenuApi.super.getModConfigScreenFactory();
     }
 
     @Override

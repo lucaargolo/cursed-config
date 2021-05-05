@@ -3,7 +3,7 @@
   "id": "cursedconfig",
   "version": "${version}",
   "name": "Cursed Config",
-  "description": "An extremely cursed config library, with auto generated screen support, made for internal use by my Fabric mods.",
+  "description": "An extremely cursed config library, with auto-generated screen support, made for internal use by my Fabric mods.",
   "authors": [
     "D4rkness_King"
   ],
