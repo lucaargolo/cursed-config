@@ -1,4 +1,4 @@
-package io.github.lucaargolo.latte.screen;
+package io.github.lucaargolo.cursedconfig.screen;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -63,8 +63,8 @@ public class ConfigurableWidget<V> extends ElementListWidget.Entry<ConfigurableW
         this.mapReference = mapReference;
 
         this.textField = new TextFieldWidget(textRenderer, width/2, 0, width/2-51, height, text);
-        this.addEntryButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("screen.latte.add"), (button) -> isAdding = true);
-        this.removeEntryButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("screen.latte.remove"), (button) -> isRemoved = true);
+        this.addEntryButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("screen.cursedconfig.add"), (button) -> isAdding = true);
+        this.removeEntryButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("screen.cursedconfig.remove"), (button) -> isRemoved = true);
         this.resetButton = new ButtonWidget(width-40, 0, 40, height+2, new TranslatableText("controls.reset"), (button) -> this.reset());
 
         this.children.add(textField);

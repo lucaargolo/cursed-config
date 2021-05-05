@@ -1,25 +1,25 @@
 {
   "schemaVersion": 1,
-  "id": "latte",
+  "id": "cursedconfig",
   "version": "${version}",
-  "name": "Latte",
-  "description": "Yet another config library, with auto generated screen support, made for internal use by my Fabric mods.",
+  "name": "Cursed Config",
+  "description": "An extremely cursed config library, with auto generated screen support, made for internal use by my Fabric mods.",
   "authors": [
     "D4rkness_King"
   ],
   "contact": {
-    "homepage": "https://github.com/lucaargolo/latte",
-    "sources": "https://github.com/lucaargolo/latte",
-    "issues": "https://github.com/lucaargolo/latte/issues"
+    "homepage": "https://github.com/lucaargolo/cursed-config",
+    "sources": "https://github.com/lucaargolo/cursed-config",
+    "issues": "https://github.com/lucaargolo/cursed-config/issues"
   },
   "license": "MPL-2.0",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "io.github.lucaargolo.latte.impl.LatteImpl"
+      "io.github.lucaargolo.cursedconfig.impl.CursedImpl"
     ],
     "modmenu": [
-      "io.github.lucaargolo.latte.compat.ModMenuCompat"
+      "io.github.lucaargolo.cursedconfig.compat.ModMenuCompat"
     ]
   },
   "custom": {

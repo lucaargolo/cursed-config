@@ -1,4 +1,4 @@
-package io.github.lucaargolo.latte;
+package io.github.lucaargolo.cursedconfig;
 
 
 import com.google.gson.Gson;
@@ -17,15 +17,16 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class LatteConfig<C> {
+public class CursedConfig<C> {
 
-    public static HashMap<String, Pair<Text, ArrayList<LatteConfig<?>>>> configsForScreens = new HashMap<>();
+    public static HashMap<String, Pair<Text, ArrayList<CursedConfig<?>>>> configsForScreens = new HashMap<>();
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private static final Logger LOGGER = LogManager.getLogger("Latte");
+    private static final Logger LOGGER = LogManager.getLogger("Cursed Config");
     private static final JsonParser JSON_PARSER = new JsonParser();
 
     private final File configFile;
@@ -34,7 +35,7 @@ public class LatteConfig<C> {
     private final C config;
     private JsonElement configElement;
 
-    private LatteConfig(File configFile, Text configTitle, Class<C> configClass, C config, JsonElement configElement) {
+    private CursedConfig(File configFile, Text configTitle, Class<C> configClass, C config, JsonElement configElement) {
         this.configFile = configFile;
         this.configTitle = configTitle;
         this.configClass = configClass;
@@ -103,7 +104,7 @@ public class LatteConfig<C> {
             return this;
         }
 
-        public LatteConfig<C> build() {
+        public CursedConfig<C> build() {
             if(configClass == null) {
                 throw new NullPointerException("Config class can't be null");
             }else if(defaultConfig == null){
@@ -129,7 +130,7 @@ public class LatteConfig<C> {
                 }
                 File configFile = new File(configDir + filePath.toString() + ".json");
 
-                LatteConfig<C> latteConfig = null;
+                CursedConfig<C> cursedConfig = null;
 
                 try {
                     if (configFile.createNewFile()) {
@@ -138,7 +139,7 @@ public class LatteConfig<C> {
                         try (PrintWriter out = new PrintWriter(configFile)) {
                             out.println(jsonString);
                         }
-                        latteConfig = new LatteConfig<>(configFile, configTitle, configClass, defaultConfig, JSON_PARSER.parse(jsonString));
+                        cursedConfig = new CursedConfig<>(configFile, configTitle, configClass, defaultConfig, JSON_PARSER.parse(jsonString));
                     } else {
                         LOGGER.info("A config file was found at: "+configFile+". Loading it..");
                         String jsonString = new String(Files.readAllBytes(configFile.toPath()));
@@ -146,28 +147,28 @@ public class LatteConfig<C> {
                         if(loadedConfig == null) {
                             throw new NullPointerException("The config file was empty.");
                         }
-                        latteConfig = new LatteConfig<>(configFile, configTitle, configClass, loadedConfig, JSON_PARSER.parse(jsonString));
+                        cursedConfig = new CursedConfig<>(configFile, configTitle, configClass, loadedConfig, JSON_PARSER.parse(jsonString));
                     }
                 }catch (Exception exception) {
                     LOGGER.error("There was an error creating/loading the config file at "+configFile+"!", exception);
                 }
 
-                if(latteConfig == null) {
+                if(cursedConfig == null) {
                     String jsonString = GSON.toJson(GSON.toJson(defaultConfig));
                     LOGGER.warn("Failed to load config file at: " + configFile + ". Defaulting to original one.");
-                    latteConfig = new LatteConfig<>(configFile, configTitle, configClass, defaultConfig, JSON_PARSER.parse(jsonString));
+                    cursedConfig = new CursedConfig<>(configFile, configTitle, configClass, defaultConfig, JSON_PARSER.parse(jsonString));
                 }
 
                 if(modIdForScreen != null) {
-                    Pair<Text, ArrayList<LatteConfig<?>>> registeredConfigs = configsForScreens.get(modIdForScreen);
+                    Pair<Text, ArrayList<CursedConfig<?>>> registeredConfigs = configsForScreens.get(modIdForScreen);
                     if(registeredConfigs == null) {
                         registeredConfigs = new Pair<>(configTitle, new ArrayList<>());
                     }
-                    registeredConfigs.getRight().add(latteConfig);
+                    registeredConfigs.getRight().add(cursedConfig);
                     configsForScreens.put(modIdForScreen, registeredConfigs);
                 }
 
-                return latteConfig;
+                return cursedConfig;
             }
         }
 

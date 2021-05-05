@@ -1,7 +1,7 @@
-package io.github.lucaargolo.latte.screen;
+package io.github.lucaargolo.cursedconfig.screen;
 
 import com.google.gson.JsonElement;
-import io.github.lucaargolo.latte.LatteConfig;
+import io.github.lucaargolo.cursedconfig.CursedConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.function.Function;
 
 
-public class LatteScreen extends Screen {
+public class ConfigScreen extends Screen {
 
     private final Screen previous;
-    private final List<LatteConfig<?>> configs;
+    private final List<CursedConfig<?>> configs;
     private final List<ConfigurableListWidget> listWidgets;
 
     private int selectedList = 0;
@@ -29,7 +29,7 @@ public class LatteScreen extends Screen {
     private ButtonWidget resetButton;
     private ButtonWidget saveButton;
 
-    public LatteScreen(Screen previous, Text title, List<LatteConfig<?>> configs) {
+    public ConfigScreen(Screen previous, Text title, List<CursedConfig<?>> configs) {
         super(title);
         this.configs = configs;
         this.listWidgets = new ArrayList<>();
@@ -61,7 +61,7 @@ public class LatteScreen extends Screen {
         this.resetButton.active = this.listWidget.isResettable();
         this.addButton(this.resetButton);
 
-        this.saveButton = new ButtonWidget(this.width / 2 - 50, this.height - 28, 100, 20, new TranslatableText("screen.latte.save"), (button) -> this.saveList(this.listWidget.save()));
+        this.saveButton = new ButtonWidget(this.width / 2 - 50, this.height - 28, 100, 20, new TranslatableText("screen.cursedconfig.save"), (button) -> this.saveList(this.listWidget.save()));
         this.saveButton.active = this.listWidget.isSavable();
         this.addButton(this.saveButton);
 
@@ -107,14 +107,14 @@ public class LatteScreen extends Screen {
 
     public static class AddKeyScreen extends Screen {
 
-        private final LatteScreen previous;
+        private final ConfigScreen previous;
         private final Function<String, Object> validator;
         private final Pair<Integer, Pair<String, JsonElement>> injected;
         private TextFieldWidget textField;
         private ButtonWidget doneButton;
 
-        public AddKeyScreen(LatteScreen previous, Class<?> keyClass, Pair<Integer, Pair<String, JsonElement>> injected) {
-            super(new LiteralText("Add Entry"));
+        public AddKeyScreen(ConfigScreen previous, Class<?> keyClass, Pair<Integer, Pair<String, JsonElement>> injected) {
+            super(new TranslatableText("screen.cursedconfig.add_entry"));
             this.previous = previous;
 
             if(keyClass == int.class || keyClass == Integer.class) {

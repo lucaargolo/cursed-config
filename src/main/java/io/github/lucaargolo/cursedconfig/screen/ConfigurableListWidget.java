@@ -1,8 +1,11 @@
-package io.github.lucaargolo.latte.screen;
+package io.github.lucaargolo.cursedconfig.screen;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
-import io.github.lucaargolo.latte.LatteConfig;
+import io.github.lucaargolo.cursedconfig.CursedConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.widget.EntryListWidget;
@@ -17,14 +20,14 @@ import java.util.*;
 
 public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?>> implements TickableElement {
 
-    private final LatteConfig<?> config;
+    private final CursedConfig<?> config;
 
     private int offset = 0;
     private String lastElement = null;
     private boolean isArray = false, isMap = false, isObject = false;
     private final LinkedList<String> pushedLabels = new LinkedList<>();
 
-    public ConfigurableListWidget(LatteConfig<?> config, MinecraftClient client) {
+    public ConfigurableListWidget(CursedConfig<?> config, MinecraftClient client) {
         super(client, 0, 0, 0, 0, 25);
         this.config = config;
         initElements(children(), "", null, config.getConfigClass(), config.getConfigClass(), null,  config.getElement());
@@ -243,13 +246,13 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
                     }else{
                         value = valueClass.newInstance();
                     }
-                    JsonElement valueElement = LatteConfig.GSON.toJsonTree(value);
+                    JsonElement valueElement = CursedConfig.GSON.toJsonTree(value);
                     injectable = new Pair<>(index, new Pair<>("", valueElement));
 
                     Class<?> keyClass = widget.getKeyClass();
                     if(keyClass != null) {
-                        if(client.currentScreen instanceof LatteScreen) {
-                            client.openScreen(new LatteScreen.AddKeyScreen((LatteScreen) client.currentScreen, keyClass, injectable));
+                        if(client.currentScreen instanceof ConfigScreen) {
+                            client.openScreen(new ConfigScreen.AddKeyScreen((ConfigScreen) client.currentScreen, keyClass, injectable));
                         }
                         return;
                     }

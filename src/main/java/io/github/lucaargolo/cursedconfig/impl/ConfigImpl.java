@@ -1,4 +1,4 @@
-package io.github.lucaargolo.latte.impl;
+package io.github.lucaargolo.cursedconfig.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
