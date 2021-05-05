@@ -141,7 +141,7 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
         pushedLabels.clear();
         List<ConfigurableWidget<?>> reloadedEntries = new ArrayList<>();
         initElements(reloadedEntries, "", null, config.getConfigClass(), config.getConfigClass(), null, newElement);
-        int index = 0;
+        int index = 0, difference = reloadedEntries.size() - children().size();
         boolean shouldSkipNext = false;
         ListIterator<ConfigurableWidget<?>> reloadedEntriesIterator = reloadedEntries.listIterator();
         while (reloadedEntriesIterator.hasNext()) {
@@ -149,15 +149,41 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
             ConfigurableWidget<?> oldEntry = null;
             if(index < children().size()) {
                 oldEntry = children().get(index);
+                if(inject == null && difference != 0 && index - difference > 0 && index - difference < children().size()) {
+                    ConfigurableWidget<?> differentOldEntry = children().get(index-difference);
+                    if(differentOldEntry != null && differentOldEntry.getOffset() == reloadedEntry.getOffset() && reloadedEntry.getOriginalValue() != null && ((differentOldEntry.isResettable() && reloadedEntry.getOriginalValue().equals(differentOldEntry.getCurrentValue())) || reloadedEntry.isValueJsonElement())) {
+                        String key = differentOldEntry.getKey();
+                        Integer keyInt = null;
+                        try { keyInt = Integer.parseInt(key); }catch (Exception ignored) { }
+                        if (key.equals(reloadedEntry.getKey())) {
+                            if (reloadedEntry.isValueJsonElement()) {
+                                differentOldEntry.setCurrentValue(reloadedEntry.getCurrentValue());
+                            }
+                            oldEntry = null;
+                            reloadedEntriesIterator.remove();
+                            reloadedEntriesIterator.add(differentOldEntry);
+                        } else if (keyInt != null && reloadedEntry.getKey().equals("" + (keyInt - 1))) {
+                            oldEntry = null;
+                            differentOldEntry.setKey("" + (keyInt - 1));
+                            reloadedEntriesIterator.remove();
+                            reloadedEntriesIterator.add(differentOldEntry);
+                        } else if (keyInt != null && reloadedEntry.getKey().equals("" + (keyInt + 1))) {
+                            oldEntry = null;
+                            differentOldEntry.setKey("" + (keyInt + 1));
+                            reloadedEntriesIterator.remove();
+                            reloadedEntriesIterator.add(differentOldEntry);
+                        }
+                    }
+                }
             }
             if(oldEntry != null && oldEntry.getOffset() == reloadedEntry.getOffset() && reloadedEntry.getOriginalValue() != null && ((oldEntry.isResettable() && reloadedEntry.getOriginalValue().equals(oldEntry.getCurrentValue())) || (reloadedEntry.isValueJsonElement()))) {
                 String key = oldEntry.getKey();
                 Integer keyInt = null;
                 try { keyInt = Integer.parseInt(key); }catch (Exception ignored) { }
-                if (reloadedEntry.isValueJsonElement()) {
-                    oldEntry.setCurrentValue(reloadedEntry.getCurrentValue());
-                }
                 if (key.equals(reloadedEntry.getKey())) {
+                    if (reloadedEntry.isValueJsonElement()) {
+                        oldEntry.setCurrentValue(reloadedEntry.getCurrentValue());
+                    }
                     reloadedEntriesIterator.remove();
                     reloadedEntriesIterator.add(oldEntry);
                 } else if (keyInt != null && reloadedEntry.getKey().equals("" + (keyInt - 1))) {
