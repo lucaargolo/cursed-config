@@ -130,7 +130,6 @@ public class ConfigurableListWidget extends EntryListWidget<ConfigurableWidget<?
         return jsonElementStack.getFirst();
     }
 
-    //TODO: Fix reset button when resetting children
     public void reload(Pair<Integer, Pair<String, JsonElement>> inject) {
         JsonElement newElement = save(inject);
         offset = 0;
